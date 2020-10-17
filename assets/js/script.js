@@ -62,7 +62,9 @@ var ui = (function(){
         inputType: ".add__type",
         inputDescription: ".add__description",
         inputValue: ".add__value",
-        submitBtn: ".add__btn"
+        submitBtn: ".add__btn",
+        incomeContainer: ".income__list",
+        expenseContainer: ".expenses__list"
     }
 
     return {
@@ -77,6 +79,37 @@ var ui = (function(){
         //Exposing DOM elements to public
         domStringsExport: function(){
             return domStrings;
+        },
+        //Add new Item in the list
+        addListItem: function(obj, type){
+            var html, newHtml, element;
+
+            //Create New HTML String
+            if(type === "exp"){
+                element = domStrings.expenseContainer;
+                html = '<div class="item clearfix" id="expense-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
+            }else if (type === "inc"){
+                element = domStrings.incomeContainer;
+                html = '<div class="item clearfix" id="income-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
+            }
+            //Replace Placeholder text with actual data
+            newHtml = html.replace("%id%", obj.id);
+            newHtml = newHtml.replace("%description%", obj.description);
+            newHtml = newHtml.replace("%value%", obj.value);
+            //insert new HTML into DOM
+            document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);           
+        },
+        resetFields: function(){
+            var fields, fieldArray;
+            //queryselector uses css selectors
+            fields= document.querySelectorAll(domStrings.inputDescription + "," + domStrings.inputValue);
+            //queryselector doesnt return array, only list
+            //use prototype array to slice and use call method "Conversion to Array"
+            fieldArray = Array.prototype.slice.call(fields);
+            //Loop over the array to delete the values
+            fieldArray.forEach(function(current){
+                current.value = "";
+            });
         }
     }
 
@@ -92,6 +125,10 @@ var app = (function(budgetctrl, uictrl){
         //2. Add new Item to the Budget 
         newItem = budgetctrl.addItem(input.type, input.description, input.value);
         console.log(budgetctrl.exposeData());
+        //3. Add new Item to UI
+        uictrl.addListItem(newItem, input.type);
+        //4. Reset the input fields
+        uictrl.resetFields();
     }
     //Setting Up All Event Listeners
     function setupEventListeners(){
