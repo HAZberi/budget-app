@@ -32,11 +32,11 @@ var budget = (function(){
 
             //Create New ID
             if (data.allItems[type].length > 0){
-                id = data.allItems[type][data.allItems[type].length - 1] + 1;
+                id = data.allItems[type][data.allItems[type].length - 1].id + 1;
             }else{
                 id = 0;
             }
-
+            console.log(id);
             //Create New Item
             if(type === "exp"){
                 newItem = new Expense(id, desc, value);
