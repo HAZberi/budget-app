@@ -93,7 +93,11 @@ var ui = (function(){
         inputValue: ".add__value",
         submitBtn: ".add__btn",
         incomeContainer: ".income__list",
-        expenseContainer: ".expenses__list"
+        expenseContainer: ".expenses__list",
+        balanceLabel: ".budget__value",
+        totalIncomeLabel: ".budget__income--value",
+        totalExpenseLabel: ".budget__expenses--value",
+        percentageLabel: ".budget__expenses--percentage"
     }
 
     return {
@@ -139,9 +143,21 @@ var ui = (function(){
             fieldArray.forEach(function(curr){
                 curr.value = "";
             });
+            //focus back to description field for easier input
+            fieldArray[0].focus();
+        },
+        displayBudget: function(obj){
+            //DOM Selection and Setting Budget Values
+            document.querySelector(domStrings.balanceLabel).textContent = obj.balance;
+            document.querySelector(domStrings.totalIncomeLabel).textContent = obj.totalIncome;
+            document.querySelector(domStrings.totalExpenseLabel).textContent = obj.totalExpense;
+            if(obj.percentage > 0){
+                document.querySelector(domStrings.percentageLabel).textContent = obj.percentage + "%";
+            }else{
+                document.querySelector(domStrings.percentageLabel).textContent = "---";
+            }    
         }
     }
-
 })();
 //App Handler
 var app = (function(budgetctrl, uictrl){
@@ -154,9 +170,8 @@ var app = (function(budgetctrl, uictrl){
         budget = budgetctrl.retrieveBudget();
         console.log(budget);
         //7. Add the Calculated Budget to UI
+        uictrl.displayBudget(budget);
     }
-
-
     //Adding an Item to Budget App
     var addItem = function(){
         var input, newItem;
@@ -187,6 +202,12 @@ var app = (function(budgetctrl, uictrl){
         //App initialization Method and setting up listners
         init: function(){
             console.log("App Initialization.................");
+            uictrl.displayBudget({
+                totalExpense : 0,
+                totalIncome : 0,
+                balance : 0,
+                percentage : -1
+            });
             setupEventListeners();
         }
     }
