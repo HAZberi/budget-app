@@ -80,6 +80,20 @@ var budget = (function(){
                 balance : data.balance,
                 percentage : data.percentage 
             }
+        },
+        deleteItemData: function(type, id){
+            var allIds, indexToDelete;
+            //creating an array of all ids of the [type] Objects
+            allIds = data.allItems[type].map(function(current){
+                //maping only ids of [type] Object to the new array
+                return current.id;
+            });
+            //Finding the index to delete
+            indexToDelete = allIds.indexOf(id);
+            //Delete the data at the found Index
+            if(indexToDelete !== -1){
+                data.allItems[type].splice(indexToDelete, 1);
+            }
         }
     }
 })();
@@ -97,7 +111,8 @@ var ui = (function(){
         balanceLabel: ".budget__value",
         totalIncomeLabel: ".budget__income--value",
         totalExpenseLabel: ".budget__expenses--value",
-        percentageLabel: ".budget__expenses--percentage"
+        percentageLabel: ".budget__expenses--percentage",
+        itemContainer: ".container"
     }
 
     return {
@@ -120,10 +135,10 @@ var ui = (function(){
             //Create New HTML String
             if(type === "exp"){
                 element = domStrings.expenseContainer;
-                html = '<div class="item clearfix" id="expense-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
+                html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
             }else if (type === "inc"){
                 element = domStrings.incomeContainer;
-                html = '<div class="item clearfix" id="income-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
+                html = '<div class="item clearfix" id="inc-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
             }
             //Replace Placeholder text with actual data
             newHtml = html.replace("%id%", obj.id);
@@ -131,6 +146,10 @@ var ui = (function(){
             newHtml = newHtml.replace("%value%", obj.value);
             //insert new HTML into DOM
             document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);           
+        },
+        deleteListItem: function(domId){
+            var el = document.getElementById(domId);
+            el.parentNode.removeChild(el);
         },
         resetFields: function(){
             var fields, fieldArray;
@@ -168,7 +187,6 @@ var app = (function(budgetctrl, uictrl){
         budgetctrl.calculate();
         //6. Return Budget
         budget = budgetctrl.retrieveBudget();
-        console.log(budget);
         //7. Add the Calculated Budget to UI
         uictrl.displayBudget(budget);
     }
@@ -188,6 +206,25 @@ var app = (function(budgetctrl, uictrl){
             budgetUpdate();
         }
     }
+    //Delete Item from App
+    var deleteItem = function(event){
+        var itemLog, splitID, type, ID;
+        //retrieve the parent id of list item
+        itemLog = event.target.parentNode.parentNode.parentNode.parentNode.id;
+        //split the id string into array
+        splitID = itemLog.split("-");
+        //Storing values in type and ID
+        type = splitID[0];
+        ID = parseInt(splitID[1]),
+        //1. Delete Item from Data Structure
+        budgetctrl.deleteItemData(type, ID);
+        //2. Recalculate and Update Budget
+        budgetUpdate();
+        //3. Delete Item from UI
+        uictrl.deleteListItem(itemLog);
+
+        
+    }
     //Setting Up All Event Listeners
     function setupEventListeners(){
         var getDom = uictrl.domStringsExport();
@@ -196,6 +233,7 @@ var app = (function(budgetctrl, uictrl){
             if(event.keyCode === 13 || event.which === 13){
                 addItem();
             }
+        document.querySelector(getDom.itemContainer).addEventListener("click", deleteItem);
         });
     } 
     return {
@@ -211,6 +249,5 @@ var app = (function(budgetctrl, uictrl){
             setupEventListeners();
         }
     }
-
 })(budget, ui);
 app.init();
