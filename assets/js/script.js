@@ -5,7 +5,18 @@ var budget = (function(){
     var Expense = function(id, description, value){
         this.id = id;
         this.description = description,
-        this.value = value
+        this.value = value,
+        this.percentage = -1
+    }
+    Expense.prototype.percentCalc = function(totalIncome){
+        if(totalIncome > 0){
+            this.percentage = Math.round((this.value/totalIncome)*100);
+        }else{
+            this.percentage = -1;
+        }
+    }
+    Expense.prototype.getPecent = function(){
+        return this.percentage;
     }
     var Income = function(id, description, value){
         this.id = id;
@@ -72,6 +83,20 @@ var budget = (function(){
                 data.percentage = -1
             }
         },
+        percentageCalc: function(){
+            //Loop over expenses array and calculate percentage for all objects
+            data.allItems.exp.forEach(function(current){
+                current.percentCalc(data.total.inc);
+            });
+        },
+        retrievePercentage: function(){
+            var percArray;
+            //Loop over expenses array and create an array for all percentages
+            percArray = data.allItems.exp.map(function(current){
+                return current.getPecent();
+            });
+            return percArray;
+        },
         retrieveBudget: function(){
             return {
                 //returning the budget
@@ -112,7 +137,8 @@ var ui = (function(){
         totalIncomeLabel: ".budget__income--value",
         totalExpenseLabel: ".budget__expenses--value",
         percentageLabel: ".budget__expenses--percentage",
-        itemContainer: ".container"
+        itemContainer: ".container",
+        expensePercentLabel: ".item__percentage"
     }
 
     return {
@@ -175,20 +201,50 @@ var ui = (function(){
             }else{
                 document.querySelector(domStrings.percentageLabel).textContent = "---";
             }    
+        },
+        displayPercentages: function(percentage){
+            var domList;
+            //Selecting all relevant dom Elements
+            domList =  document.querySelectorAll(domStrings.expensePercentLabel);
+            //Creating my own for Each function for Node Lists
+            var nodeListForEach = function(list, callback){
+                for(var i = 0; i < list.length; i++){
+                    callback(list[i], i);
+                }
+            }
+            //Calling my own for each function
+            nodeListForEach(domList, function(current, index){               
+                if(percentage[index] > 0){
+                    current.textContent = percentage[index] + "%";
+                }else{
+                    current.textContent = "---";
+                }
+            });
         }
     }
 })();
 //App Handler
 var app = (function(budgetctrl, uictrl){
     //Updating Budget
-    var budget;
     var budgetUpdate = function(){
+        var budget;
         //5. Calculating the Budget
         budgetctrl.calculate();
         //6. Return Budget
         budget = budgetctrl.retrieveBudget();
         //7. Add the Calculated Budget to UI
         uictrl.displayBudget(budget);
+    }
+    //Updating Percentages
+    var percentUpdate = function(){
+        var percentage;
+        //Calculating Percentages
+        budgetctrl.percentageCalc();
+        //Return Percentages in array
+        percentage = budgetctrl.retrievePercentage();
+        console.log(percentage);
+        //Display Percentages to UI
+        uictrl.displayPercentages(percentage);
     }
     //Adding an Item to Budget App
     var addItem = function(){
@@ -204,6 +260,9 @@ var app = (function(budgetctrl, uictrl){
             uictrl.resetFields();
             //Updating Budget
             budgetUpdate();
+            //Updating Percentages
+            percentUpdate();
+
         }
     }
     //Delete Item from App
@@ -222,8 +281,9 @@ var app = (function(budgetctrl, uictrl){
         budgetUpdate();
         //3. Delete Item from UI
         uictrl.deleteListItem(itemLog);
+        //4. Updating Percentages
+        percentUpdate();
 
-        
     }
     //Setting Up All Event Listeners
     function setupEventListeners(){
