@@ -12,6 +12,13 @@ var budget = (function(){
         this.description = description,
         this.value = value
     }
+    var totalCalculate = function(type){
+        var sum = 0;
+        data.allItems[type].forEach(function(current){
+            sum += current.value; 
+        });
+        return sum;
+    }
     //For Data Storage
     var data = {
         //Storing newly created Entries (Objects of Expenses & Incomes) 
@@ -22,7 +29,9 @@ var budget = (function(){
         total : {
             exp: 0,
             inc: 0
-        }
+        },
+        balance : 0,
+        percentage : -1
     }
     //Public Methods
     return {
@@ -36,7 +45,6 @@ var budget = (function(){
             }else{
                 id = 0;
             }
-            console.log(id);
             //Create New Item
             if(type === "exp"){
                 newItem = new Expense(id, desc, value);
@@ -50,9 +58,30 @@ var budget = (function(){
         //Just for Testing
         exposeData: function(){
             return data;
+        },
+        calculate: function(){
+            //calculating total income and total expenses
+            data.total.exp = totalCalculate("exp");
+            data.total.inc = totalCalculate("inc");
+            //calculating total budget > income - expenses
+            data.balance = data.total.inc - data.total.exp;
+            //calculate percentage of income used
+            if(data.total.inc > 0){
+                data.percentage = Math.round((data.total.exp / data.total.inc)*100);
+            }else{
+                data.percentage = -1
+            }
+        },
+        retrieveBudget: function(){
+            return {
+                //returning the budget
+                totalExpense : data.total.exp,
+                totalIncome : data.total.inc,
+                balance : data.balance,
+                percentage : data.percentage 
+            }
         }
     }
-
 })();
 
 //User Interface Handler
@@ -73,7 +102,7 @@ var ui = (function(){
             return {
                 type: document.querySelector(domStrings.inputType).value,
                 description: document.querySelector(domStrings.inputDescription).value,
-                value: document.querySelector(domStrings.inputValue).value
+                value: parseFloat(document.querySelector(domStrings.inputValue).value)
             }
         },
         //Exposing DOM elements to public
@@ -107,8 +136,8 @@ var ui = (function(){
             //use prototype array to slice and use call method "Conversion to Array"
             fieldArray = Array.prototype.slice.call(fields);
             //Loop over the array to delete the values
-            fieldArray.forEach(function(current){
-                current.value = "";
+            fieldArray.forEach(function(curr){
+                curr.value = "";
             });
         }
     }
@@ -116,19 +145,33 @@ var ui = (function(){
 })();
 //App Handler
 var app = (function(budgetctrl, uictrl){
+    //Updating Budget
+    var budget;
+    var budgetUpdate = function(){
+        //5. Calculating the Budget
+        budgetctrl.calculate();
+        //6. Return Budget
+        budget = budgetctrl.retrieveBudget();
+        console.log(budget);
+        //7. Add the Calculated Budget to UI
+    }
+
+
     //Adding an Item to Budget App
     var addItem = function(){
         var input, newItem;
         //1. Get data from Input Field
         input = uictrl.inputParams();
-        console.log(input);
-        //2. Add new Item to the Budget 
-        newItem = budgetctrl.addItem(input.type, input.description, input.value);
-        console.log(budgetctrl.exposeData());
-        //3. Add new Item to UI
-        uictrl.addListItem(newItem, input.type);
-        //4. Reset the input fields
-        uictrl.resetFields();
+        if (input.description !== "" && input.value > 0 && !isNaN(input.value)){
+            //2. Add new Item to the Budget 
+            newItem = budgetctrl.addItem(input.type, input.description, input.value);
+            //3. Add new Item to UI
+            uictrl.addListItem(newItem, input.type);
+            //4. Reset the input fields
+            uictrl.resetFields();
+            //Updating Budget
+            budgetUpdate();
+        }
     }
     //Setting Up All Event Listeners
     function setupEventListeners(){
