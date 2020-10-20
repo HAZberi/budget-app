@@ -125,14 +125,17 @@ body {
 }
 
 .add__type {
-    width: 55px;
+    width: 100px;
     border: 1px solid #e7e7e7;
     height: 44px;
-    font-size: 18px;
+    font-size: 14px;
     color: inherit;
+    font-family: inherit;
     background-color: #fff;
     margin-right: 10px;
     font-weight: 300;
+    padding: 12px 10px;
+    border-radius: 5px;
     transition: border 0.3s;
 }
 
