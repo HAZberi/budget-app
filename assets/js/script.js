@@ -171,6 +171,12 @@ var ui = (function(){
             return num;
         }
     }
+    //Creating my own for Each function for Node Lists
+    var nodeListForEach = function(list, callback){
+        for(var i = 0; i < list.length; i++){
+            callback(list[i], i);
+        }
+    }
     return {
         //Getting OR Fectching User Input
         inputParams: function(){
@@ -243,12 +249,6 @@ var ui = (function(){
             var domList;
             //Selecting all relevant dom Elements
             domList =  document.querySelectorAll(domStrings.expensePercentLabel);
-            //Creating my own for Each function for Node Lists
-            var nodeListForEach = function(list, callback){
-                for(var i = 0; i < list.length; i++){
-                    callback(list[i], i);
-                }
-            }
             //Calling my own for each function
             nodeListForEach(domList, function(current, index){               
                 if(percentage[index] > 0){
@@ -257,6 +257,23 @@ var ui = (function(){
                     current.textContent = "---";
                 }
             });
+        },
+        typeChange: function(){
+            //Change the CSS class when user changes input type to expenses
+            var chElements, btn;
+            //Fetching all the fields from DOM
+            chElements = document.querySelectorAll(
+                domStrings.inputType + "," +
+                domStrings.inputDescription + "," +
+                domStrings.inputValue
+            );
+            //Calling my own for each function
+            nodeListForEach(chElements, function(current){
+                current.classList.toggle("red-focus");
+            });
+            //Fetching Submit btn DOM
+            btn = document.querySelector(domStrings.submitBtn);
+            btn.classList.toggle("red");
         }
     }
 })();
@@ -329,8 +346,9 @@ var app = (function(budgetctrl, uictrl){
             if(event.keyCode === 13 || event.which === 13){
                 addItem();
             }
-        document.querySelector(getDom.itemContainer).addEventListener("click", deleteItem);
         });
+        document.querySelector(getDom.itemContainer).addEventListener("click", deleteItem);
+        document.querySelector(getDom.inputType).addEventListener("change", uictrl.typeChange);
     } 
     return {
         //App initialization Method and setting up listners
